@@ -31,7 +31,8 @@ defmodule ConfigSmuggler do
         # ...
       }}
   """
-  @spec encode_file(String.t) :: {:ok, %{String.t => String.t}} | {:error, String.t}
+  @spec encode_file(String.t()) ::
+          {:ok, %{String.t() => String.t()}} | {:error, String.t()}
   def encode_file(filename) do
     try do
       {env, _files} = Mix.Config.eval!(filename)
@@ -51,12 +52,13 @@ defmodule ConfigSmuggler do
           "elixir-my_app-key" => "\"value\""
       }}
   """
-  @spec encode_env(Keyword.t) :: {:ok, %{String.t => String.t}} | {:error, String.t}
+  @spec encode_env(Keyword.t()) ::
+          {:ok, %{String.t() => String.t()}} | {:error, String.t()}
   def encode_env(env) do
-    {:ok,  env
-    |> Enum.flat_map(&Encoder.encode_app_and_opts/1)
-    |> Enum.into(%{})
-  }
+    {:ok,
+     env
+     |> Enum.flat_map(&Encoder.encode_app_and_opts/1)
+     |> Enum.into(%{})}
   end
 
   @doc ~S"""
@@ -78,15 +80,21 @@ defmodule ConfigSmuggler do
         "elixir-my_app-MyApp.Endpoint-url-port" => "4444"
       }}
   """
-  @spec encode_statement(String.t) :: {:ok, %{String.t => String.t}} | {:error, String.t}
+  @spec encode_statement(String.t()) ::
+          {:ok, %{String.t() => String.t()}} | {:error, String.t()}
   def encode_statement(stmt) do
     case String.split(stmt, ":", parts: 2) do
       [_, config] ->
         case Code.eval_string("[:#{config}]") do
           {[app, path | opts], _} when is_atom(path) ->
-            {:ok, Encoder.encode_app_path_and_opts(app, [path], opts) |> Enum.into(%{})}
+            {:ok,
+             Encoder.encode_app_path_and_opts(app, [path], opts)
+             |> Enum.into(%{})}
+
           {[app | opts], _} ->
-            {:ok, Encoder.encode_app_path_and_opts(app, [], opts) |> Enum.into(%{})}
+            {:ok,
+             Encoder.encode_app_path_and_opts(app, [], opts) |> Enum.into(%{})}
+
           _ ->
             {:error, "couldn't eval statement #{stmt}"}
         end
@@ -119,7 +127,8 @@ defmodule ConfigSmuggler do
         ]
       ]}
   """
-  @spec decode(%{String.t => String.t}) :: {:ok, Keyword.t} | {:error, String.t}
+  @spec decode(%{String.t() => String.t()}) ::
+          {:ok, Keyword.t()} | {:error, String.t()}
   def decode(map) do
     ConfigSmuggler.Decoder.decode_and_merge(map)
   end

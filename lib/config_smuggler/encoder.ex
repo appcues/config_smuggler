@@ -5,13 +5,13 @@ defmodule ConfigSmuggler.Encoder do
     encode_app_path_and_opts(app, [], opts)
   end
 
-  def encode_app_path_and_opts(app, path, opts) when is_list opts do
-    Enum.flat_map opts, fn {key, value} ->
+  def encode_app_path_and_opts(app, path, opts) when is_list(opts) do
+    Enum.flat_map(opts, fn {key, value} ->
       case value do
         [{_k, _v} | _] -> encode_app_path_and_opts(app, path ++ [key], value)
         _ -> [{encode_key([app] ++ path ++ [key]), inspect(value)}]
       end
-    end
+    end)
   end
 
   def encode_app_path_and_opts(app, path, value) do

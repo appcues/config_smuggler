@@ -22,7 +22,8 @@ defmodule ConfigSmuggler.Decoder do
         logger: [level: :info]
       ]}
   """
-  @spec decode_and_merge(%{String.t() => String.t()}) :: {:ok, Keyword.t()} | {:error, String.t()}
+  @spec decode_and_merge(%{String.t() => String.t()}) ::
+          {:ok, Keyword.t()} | {:error, String.t()}
   def decode_and_merge(config_map) do
     config_map
     |> Enum.to_list()
@@ -33,7 +34,6 @@ defmodule ConfigSmuggler.Decoder do
 
   defp do_decode_and_merge([{key, value} | rest], acc) do
     with {:ok, app, opts} <- decode_pair(key, value) do
-      IO.inspect {acc, [{app, opts}]}
       do_decode_and_merge(rest, Mix.Config.merge(acc, [{app, opts}]))
     end
   end
@@ -55,22 +55,23 @@ defmodule ConfigSmuggler.Decoder do
       ...> )
       {:ok, :api, [{Api.Repo, [loggers: [{Ecto.LogEntry, :log, []}]]}]}
   """
-  @spec decode_pair(String.t(), String.t()) :: {:ok, atom, Keyword.t()} | {:error, String.t()}
+  @spec decode_pair(String.t(), String.t()) ::
+          {:ok, atom, Keyword.t()} | {:error, String.t()}
   def decode_pair("elixir-" <> key, value) do
     with {:ok, app, path} <- decode_key(key),
          {:ok, evaled_value} <- eval(value) do
-      {:ok, app, [nest_value(path, evaled_value)]}
+      {:ok, app, nest_value(path, evaled_value)}
     end
   end
 
   defp nest_value(path, value) do
-    path |> Enum.reverse |> nest_value_in_reverse(value)
+    path |> Enum.reverse() |> nest_value_in_reverse(value)
   end
 
   defp nest_value_in_reverse([], value), do: value
 
   defp nest_value_in_reverse([first | rest], value) do
-    nest_value_in_reverse(rest, {first, value})
+    nest_value_in_reverse(rest, [{first, value}])
   end
 
   defp to_atom(a) when is_atom(a), do: a
@@ -117,4 +118,3 @@ defmodule ConfigSmuggler.Decoder do
     end
   end
 end
-
