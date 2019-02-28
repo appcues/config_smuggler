@@ -1,27 +1,39 @@
 defmodule ConfigSmuggler.MixProject do
   use Mix.Project
 
+  @github_repo "https://github.com/appcues/config_smuggler"
+
   def project do
     [
       app: :config_smuggler,
-      version: "0.1.0",
-      elixir: "~> 1.8",
+      version: "0.5.0",
+      elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      package: package(),
+      dialyzer: [plt_add_apps: [:mix]],
+      aliases: [docs: "docs --source-url #{@github_repo}"],
     ]
   end
 
-  # Run "mix help compile.app" to learn about applications.
+  def package do
+    [
+      licenses: ["MIT"],
+      maintainers: ["pete gamache <pete@appcues.com>"],
+      links: %{github: @github_repo},
+    ]
+  end
+
   def application do
     [
       extra_applications: [:logger],
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
       {:freedom_formatter, "~> 1.0", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.0.0-rc.4", only: :dev, runtime: :false},
     ]
   end
 end

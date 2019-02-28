@@ -1,41 +1,28 @@
 defmodule ConfigSmuggler.Decoder do
   @moduledoc false
 
-  @doc ~S"""
-  Converts a map of encoded Opscues config keys and values into a
-  keyword list of configs (as used by `Mix.Config.merge/2`).
-
-      iex> ConfigSmuggler.Decoder.decode_and_merge(%{
-      ...>   "elixir-api-Api.Repo-priv" => "\"priv/repo\"",
-      ...>   "elixir-logger-level" => ":info",
-      ...>   "elixir-api-ballz-omg" => ":wat",
-      ...>   "elixir-api-cache_ttl" => "60000",
-      ...>   "elixir-api-Api.Repo-destroy_data" => "false",
-      ...>   "elixir-api-ballz-lol" => "true"
-      ...> })
-      {:ok, [
-        api: [
-          {Api.Repo, [destroy_data: false, priv: "priv/repo"]},
-          {:ballz, [lol: true, omg: :wat]},
-          {:cache_ttl, 60000}
-        ],
-        logger: [level: :info]
-      ]}
-  """
-  @spec decode_and_merge(%{String.t() => String.t()}) ::
-          {:ok, Keyword.t()} | {:error, String.t()}
+  @spec decode_and_merge(ConfigSmuggler.encoded_config_map) ::
+          {:ok, ConfigSmuggler.decoded_configs,
+           [
+             {{ConfigSmuggler.encoded_key(), ConfigSmuggler.encoded_value()},
+              ConfigSmuggler.error_reason()}
+           ]}
   def decode_and_merge(config_map) do
-    config_map
-    |> Enum.to_list()
-    |> do_decode_and_merge([])
-  end
+    ## decoded stuff goes under `valid`, non-decoded stuff under `invalid`
+    validated_pairs =
+      Enum.reduce(config_map, %{valid: [], invalid: []}, fn {k, v}, acc ->
+        case decode_pair(k, v) do
+          {:ok, app, opts} -> %{acc | valid: [{app, opts} | acc.valid]}
+          {:error, error} -> %{acc | invalid: [{{k, v}, error} | acc.invalid]}
+        end
+      end)
 
-  defp do_decode_and_merge([], acc), do: {:ok, acc}
+    merged_config =
+      Enum.reduce(validated_pairs.valid, [], fn {app, opts}, acc ->
+        Mix.Config.merge(acc, [{app, opts}])
+      end)
 
-  defp do_decode_and_merge([{key, value} | rest], acc) do
-    with {:ok, app, opts} <- decode_pair(key, value) do
-      do_decode_and_merge(rest, Mix.Config.merge(acc, [{app, opts}]))
-    end
+    {:ok, merged_config, validated_pairs.invalid}
   end
 
   @doc ~S"""
@@ -64,6 +51,8 @@ defmodule ConfigSmuggler.Decoder do
     end
   end
 
+  def decode_pair(_key, _value), do: {:error, "invalid key"}
+
   defp nest_value(path, value) do
     path |> Enum.reverse() |> nest_value_in_reverse(value)
   end
@@ -72,16 +61,6 @@ defmodule ConfigSmuggler.Decoder do
 
   defp nest_value_in_reverse([first | rest], value) do
     nest_value_in_reverse(rest, [{first, value}])
-  end
-
-  defp to_atom(a) when is_atom(a), do: a
-  defp to_atom(s) when is_binary(s), do: String.to_atom(s)
-
-  defp maybe_cast_to_integer(value) do
-    case Integer.parse(value) do
-      {parsed, ""} -> parsed
-      _ -> value
-    end
   end
 
   @doc ~S"""
@@ -114,7 +93,7 @@ defmodule ConfigSmuggler.Decoder do
       {evaled_value, _binding} = Code.eval_string(value)
       {:ok, evaled_value}
     rescue
-      e -> {:error, e.message}
+      _e -> {:error, "could not eval value"}
     end
   end
 end
