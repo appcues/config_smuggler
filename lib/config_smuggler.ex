@@ -16,29 +16,84 @@ defmodule ConfigSmuggler do
   See `encode/1` and `decode/1` for usage examples.
   """
 
+  alias ConfigSmuggler.Encoder
+  alias ConfigSmuggler.Decoder
+
   @doc ~S"""
-  Encodes one or more Elixir config statements (in `Mix.Config`/`config.exs`-
-  style syntax) into string keys and values.
+  Reads a config file and returns a map of encoded key/value pairs
+  representing the configuration.  Respects `import_config`.
 
-      iex> ConfigSmuggler.encode("config :my_app, some_key: 22")
-      {:ok, %{"elixir-my_app-some_key" => "22"}}
+  WARNING! This function `eval`s its input, and should not be used on
+  untrusted data.
 
-      iex> ConfigSmuggler.encode("config :my_app, MyApp.Endpoint, url: [host: \"localhost\", port: 4444]")
-      {:ok, %{
-        "elixir-my_app-MyApp.Endpoint-url-host" => "\"localhost\"",
-        "elixir-my_app-MyApp.Endpoint-url-port" => "4444"
-      }}
-
-  You can even pass in the contents of a `config.exs` file directly:
-
-      iex> "config/config.exs" |> File.read! |> ConfigSmuggler.encode
+      iex> ConfigSmuggler.encode_file("config/config.exs")
       {:ok, %{
         # ...
       }}
   """
-  @spec encode(String.t) :: {:ok, %{String.t => String.t}} | {:error, String.t}
-  def encode(str) do
-    ConfigSmuggler.Encoder.encode(str)
+  @spec encode_file(String.t) :: {:ok, %{String.t => String.t}} | {:error, String.t}
+  def encode_file(filename) do
+    try do
+      {env, _files} = Mix.Config.eval!(filename)
+      encode_env(env)
+    rescue
+      e -> {:error, e.description}
+    end
+  end
+
+  @doc ~S"""
+  Returns an encoded version of the given env, which is a keyword list
+  keyed by app.
+
+      iex> ConfigSmuggler.encode_env([logger: [level: :info], my_app: [key: "value"]])
+      {:ok, %{
+          "elixir-logger-level" => ":info",
+          "elixir-my_app-key" => "\"value\""
+      }}
+  """
+  @spec encode_env(Keyword.t) :: {:ok, %{String.t => String.t}} | {:error, String.t}
+  def encode_env(env) do
+    {:ok,  env
+    |> Enum.flat_map(&Encoder.encode_app_and_opts/1)
+    |> Enum.into(%{})
+  }
+  end
+
+  @doc ~S"""
+  Encodes a single `Mix.Config.config/2,3` statement into one or more
+  encoded key/value pairs.
+
+  WARNING! This function `eval`s its input, and should not be used on
+  untrusted data.
+
+      iex> ConfigSmuggler.encode_statement("config :my_app, key1: :value1, key2: \"value2\"")
+      {:ok, %{
+          "elixir-my_app-key1" => ":value1",
+          "elixir-my_app-key2" => "\"value2\""
+      }}
+
+      iex> ConfigSmuggler.encode_statement("config :my_app, MyApp.Endpoint, url: [host: \"localhost\", port: 4444]")
+      {:ok, %{
+        "elixir-my_app-MyApp.Endpoint-url-host" => "\"localhost\"",
+        "elixir-my_app-MyApp.Endpoint-url-port" => "4444"
+      }}
+  """
+  @spec encode_statement(String.t) :: {:ok, %{String.t => String.t}} | {:error, String.t}
+  def encode_statement(stmt) do
+    case String.split(stmt, ":", parts: 2) do
+      [_, config] ->
+        case Code.eval_string("[:#{config}]") do
+          {[app, path | opts], _} when is_atom(path) ->
+            {:ok, Encoder.encode_app_path_and_opts(app, [path], opts) |> Enum.into(%{})}
+          {[app | opts], _} ->
+            {:ok, Encoder.encode_app_path_and_opts(app, [], opts) |> Enum.into(%{})}
+          _ ->
+            {:error, "couldn't eval statement #{stmt}"}
+        end
+
+      _ ->
+        {:error, "malformed statement #{stmt}"}
+    end
   end
 
   @doc ~S"""
@@ -52,16 +107,16 @@ defmodule ConfigSmuggler do
       ...>   "elixir-my_app-MyApp.Endpoint-url-port" => "4444"
       ...> })
       {:ok, [
+        logger: [level: :info],
         my_app: [
-          {:some_key, 22},
           {MyApp.Endpoint, [
             url: [
               host: "localhost",
               port: 4444
             ]
-          ]}
-        ],
-        logger: [level: :info]
+          ]},
+          {:some_key, 22},
+        ]
       ]}
   """
   @spec decode(%{String.t => String.t}) :: {:ok, Keyword.t} | {:error, String.t}

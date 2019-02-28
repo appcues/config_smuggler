@@ -32,7 +32,8 @@ defmodule ConfigSmuggler.Decoder do
   defp do_decode_and_merge([], acc), do: {:ok, acc}
 
   defp do_decode_and_merge([{key, value} | rest], acc) do
-    with {:ok, app, opts} <- decode_pair(key, value) |> IO.inspect do
+    with {:ok, app, opts} <- decode_pair(key, value) do
+      IO.inspect {acc, [{app, opts}]}
       do_decode_and_merge(rest, Mix.Config.merge(acc, [{app, opts}]))
     end
   end
@@ -58,13 +59,8 @@ defmodule ConfigSmuggler.Decoder do
   def decode_pair("elixir-" <> key, value) do
     with {:ok, app, path} <- decode_key(key),
          {:ok, evaled_value} <- eval(value) do
-      {:ok, app, nest_value(path, evaled_value)}
+      {:ok, app, [nest_value(path, evaled_value)]}
     end
-  end
-
-  def decode_pair(key, value) do
-    app = Application.get_env(:opscues_config, :app)
-    {:ok, app, [{to_atom(key), maybe_cast_to_integer(value)}]}
   end
 
   defp nest_value(path, value) do
