@@ -7,6 +7,8 @@ defmodule ConfigSmuggler.MixProject do
     [
       app: :config_smuggler,
       version: "0.5.0",
+      description:
+        "ConfigSmuggler converts Elixir-style configuration statements to and from string-encoded key/value pairs.",
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
