@@ -1,11 +1,16 @@
 defmodule ConfigSmuggler.Decoder do
   @moduledoc false
 
-  @spec decode_and_merge(ConfigSmuggler.encoded_config_map) ::
-          {:ok, ConfigSmuggler.decoded_configs,
+  @doc ~S"""
+  Turns a map of encoded key/value pairs into decoded configs that are
+  ready for e.g., `Mix.Config.merge/2`, also returning any invalid
+  key/value pairs.
+  """
+  @spec decode_and_merge(ConfigSmuggler.encoded_config_map()) ::
+          {:ok, ConfigSmuggler.decoded_configs(),
            [
              {{ConfigSmuggler.encoded_key(), ConfigSmuggler.encoded_value()},
-              ConfigSmuggler.error_reason()}
+              ConfigSmuggler.error_reason()},
            ]}
   def decode_and_merge(config_map) do
     ## decoded stuff goes under `valid`, non-decoded stuff under `invalid`
@@ -32,8 +37,6 @@ defmodule ConfigSmuggler.Decoder do
   `Mix.Config.config/2`, though the latter function is not available
   at runtime.
 
-  *DO NOT* pass untrusted input to this function!
-
   Example:
 
       iex> ConfigSmuggler.Decoder.decode_pair(
@@ -42,10 +45,12 @@ defmodule ConfigSmuggler.Decoder do
       ...> )
       {:ok, :api, [{Api.Repo, [loggers: [{Ecto.LogEntry, :log, []}]]}]}
   """
-  @spec decode_pair(String.t(), String.t()) ::
-          {:ok, atom, Keyword.t()} | {:error, String.t()}
+  @spec decode_pair(
+          ConfigSmuggler.encoded_key(),
+          ConfigSmuggler.encoded_value()
+        ) :: {:ok, atom, Keyword.t()} | {:error, ConfigSmuggler.error_reason()}
   def decode_pair("elixir-" <> key, value) do
-    with {:ok, app, path} <- decode_key(key),
+    with {:ok, app, path} <- decode_stripped_key(key),
          {:ok, evaled_value} <- eval(value) do
       {:ok, app, nest_value(path, evaled_value)}
     end
@@ -70,9 +75,15 @@ defmodule ConfigSmuggler.Decoder do
       iex> ConfigSmuggler.Decoder.decode_key("elixir-api-Api.Repo-priv")
       {:ok, :api, [Api.Repo, :priv]}
   """
-  def decode_key("elixir-" <> key), do: decode_key(key)
+  @spec decode_key(ConfigSmuggler.encoded_key()) ::
+          {:ok, atom, [atom]} | {:error, ConfigSmuggler.error_reason()}
+  def decode_key("elixir-" <> key) do
+    decode_stripped_key(key)
+  end
 
-  def decode_key(key) do
+  def decode_key(_key), do: {:error, "invalid key"}
+
+  defp decode_stripped_key(key) do
     [app | path] =
       key
       |> String.split("-")
@@ -88,6 +99,8 @@ defmodule ConfigSmuggler.Decoder do
     end
   end
 
+  ## By law of symmetry, this should be a public function `decode_value/1`,
+  ## but I do not consider it wise to expose eval so barely.
   defp eval(value) do
     try do
       {evaled_value, _binding} = Code.eval_string(value)
