@@ -7,19 +7,21 @@ defmodule ConfigSmuggler.Apply do
   Applies the configs specified in an encoded config map to the current
   environment.  Any decoding errors are ignored.
   """
-  @spec apply_encoded(ConfigSmuggler.encoded_config_map()) :: :ok
+  @spec apply_encoded(ConfigSmuggler.encoded_config_map()) ::
+          :ok | {:error, ConfigSmuggler.error_reason()}
   def apply_encoded(encoded_config_map) do
-    {:ok, decoded_configs, _errors} =
-      Decoder.decode_and_merge(encoded_config_map)
-
-    apply_decoded(decoded_configs)
+    with {:ok, decoded_configs, _errors} <-
+           Decoder.decode_and_merge(encoded_config_map) do
+      apply_decoded(decoded_configs)
+    end
   end
 
   @doc ~S"""
   Applies the configs specified in an Elixir-native config to the current
   environment.
   """
-  @spec apply_encoded(ConfigSmuggler.decoded_configs()) :: :ok
+  @spec apply_encoded(ConfigSmuggler.decoded_configs()) ::
+          :ok | {:error, ConfigSmuggler.error_reason()}
   def apply_decoded(decoded_configs)
 
   def apply_decoded([]), do: :ok
@@ -28,6 +30,8 @@ defmodule ConfigSmuggler.Apply do
     apply_config(app, opts)
     apply_decoded(rest)
   end
+
+  def apply_decoded(_), do: {:error, :bad_input}
 
   defp apply_config(app, config) do
     old_config = app |> Application.get_all_env()

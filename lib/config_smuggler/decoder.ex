@@ -12,7 +12,8 @@ defmodule ConfigSmuggler.Decoder do
              {{ConfigSmuggler.encoded_key(), ConfigSmuggler.encoded_value()},
               ConfigSmuggler.error_reason()},
            ]}
-  def decode_and_merge(config_map) do
+          | {:error, ConfigSmuggler.error_reason()}
+  def decode_and_merge(%{} = config_map) do
     ## decoded stuff goes under `valid`, non-decoded stuff under `invalid`
     validated_pairs =
       Enum.reduce(config_map, %{valid: [], invalid: []}, fn {k, v}, acc ->
@@ -29,6 +30,8 @@ defmodule ConfigSmuggler.Decoder do
 
     {:ok, merged_config, validated_pairs.invalid}
   end
+
+  def decode_and_merge(_), do: {:error, :bad_input}
 
   @doc ~S"""
   Decodes a key-value pair from ConfigSmuggler.
@@ -56,7 +59,7 @@ defmodule ConfigSmuggler.Decoder do
     end
   end
 
-  def decode_pair(_key, _value), do: {:error, "invalid key"}
+  def decode_pair(_key, _value), do: {:error, :bad_key}
 
   defp nest_value(path, value) do
     path |> Enum.reverse() |> nest_value_in_reverse(value)
@@ -81,7 +84,7 @@ defmodule ConfigSmuggler.Decoder do
     decode_stripped_key(key)
   end
 
-  def decode_key(_key), do: {:error, "invalid key"}
+  def decode_key(_key), do: {:error, :bad_key}
 
   defp decode_stripped_key(key) do
     [app | path] =
@@ -106,7 +109,7 @@ defmodule ConfigSmuggler.Decoder do
       {evaled_value, _binding} = Code.eval_string(value)
       {:ok, evaled_value}
     rescue
-      _e -> {:error, "could not eval value"}
+      _e -> {:error, :bad_value}
     end
   end
 end

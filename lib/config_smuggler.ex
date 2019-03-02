@@ -104,8 +104,12 @@ defmodule ConfigSmuggler do
   @type encoded_value :: String.t()
   @type encoded_config_map :: %{encoded_key => encoded_value}
   @type decoded_configs :: [{atom, Keyword.t()}]
-  @type error_reason :: String.t()
   @type validation_error :: {{encoded_key, encoded_value}, error_reason}
+  @type error_reason ::
+          :bad_input
+          | :bad_key
+          | :bad_value
+          | :load_error
 
   @doc ~S"""
   Applies the given config to the current environment (i.e., calls
@@ -124,93 +128,7 @@ defmodule ConfigSmuggler do
           :ok | {:error, error_reason}
   def apply(config) when is_list(config), do: Apply.apply_decoded(config)
   def apply(%{} = config), do: Apply.apply_encoded(config)
-  def apply(_), do: {:error, "wrong input type"}
-
-  @doc ~S"""
-  Reads a config file and returns a map of encoded key/value pairs
-  representing the configuration.  Respects `Mix.Config.import_config/1`.
-
-      iex> ConfigSmuggler.encode_file("config/config.exs")
-      {:ok, %{
-        "elixir-logger-level" => ":info",
-        # ...
-      }}
-  """
-  @spec encode_file(String.t()) ::
-          {:ok, encoded_config_map} | {:error, error_reason}
-  def encode_file(filename) do
-    try do
-      {env, _files} = Mix.Config.eval!(filename)
-      encode(env)
-    rescue
-      e -> {:error, e.description}
-    end
-  end
-
-  @doc ~S"""
-  Converts Elixir-native decoded configs (i.e., a keyword list with
-  app name as key and keyword list of configs as value) into an
-  encoded config map.
-
-      iex> ConfigSmuggler.encode([logger: [level: :info], my_app: [key: "value"]])
-      {:ok, %{
-          "elixir-logger-level" => ":info",
-          "elixir-my_app-key" => "\"value\"",
-      }}
-  """
-  @spec encode(decoded_configs) ::
-          {:ok, encoded_config_map} | {:error, error_reason}
-  def encode(decoded_configs) do
-    {:ok,
-     decoded_configs
-     |> Enum.flat_map(&encode_app_and_opts/1)
-     |> Enum.into(%{})}
-  end
-
-  defp encode_app_and_opts({app, opts}) do
-    Encoder.encode_app_path_and_opts(app, [], opts)
-  end
-
-  @doc ~S"""
-  Encodes a single `Mix.Config.config/2` or `Mix.Config.config/3`
-  statement into one or more encoded key/value pairs.
-
-      iex> ConfigSmuggler.encode_statement("config :my_app, key1: :value1, key2: \"value2\"")
-      {:ok, %{
-          "elixir-my_app-key1" => ":value1",
-          "elixir-my_app-key2" => "\"value2\"",
-      }}
-
-      iex> ConfigSmuggler.encode_statement("config :my_app, MyApp.Endpoint, url: [host: \"localhost\", port: 4444]")
-      {:ok, %{
-        "elixir-my_app-MyApp.Endpoint-url-host" => "\"localhost\"",
-        "elixir-my_app-MyApp.Endpoint-url-port" => "4444",
-      }}
-  """
-  @spec encode_statement(String.t()) ::
-          {:ok, encoded_config_map} | {:error, error_reason}
-  def encode_statement(stmt) do
-    case String.split(stmt, ":", parts: 2) do
-      [_, config] ->
-        case Code.eval_string("[:#{config}]") do
-          {[app, path | opts], _} when is_atom(path) ->
-            {:ok,
-             Encoder.encode_app_path_and_opts(app, [path], opts)
-             |> Enum.into(%{})}
-
-          {[app | opts], _} ->
-            {:ok,
-             Encoder.encode_app_path_and_opts(app, [], opts)
-             |> Enum.into(%{})}
-
-          _ ->
-            {:error, "couldn't eval statement #{stmt}"}
-        end
-
-      _ ->
-        {:error, "malformed statement #{stmt}"}
-    end
-  end
+  def apply(_), do: {:error, :bad_input}
 
   @doc ~S"""
   Decodes a map of string-encoded key/value pairs into a keyword list of
@@ -241,8 +159,8 @@ defmodule ConfigSmuggler do
           ],
         ],
         [
-          {{"elixir-my_app-foo", "bogus value"}, "could not eval value"},
-          {{"bad key", "22"}, "invalid key"},
+          {{"elixir-my_app-foo", "bogus value"}, :bad_value},
+          {{"bad key", "22"}, :bad_key},
         ]
       }
   """
@@ -250,4 +168,99 @@ defmodule ConfigSmuggler do
   def decode(encoded_config_map) do
     Decoder.decode_and_merge(encoded_config_map)
   end
+
+  @doc ~S"""
+  Converts Elixir-native decoded configs (i.e., a keyword list with
+  app name as key and keyword list of configs as value) into an
+  encoded config map.
+
+      iex> ConfigSmuggler.encode([logger: [level: :info], my_app: [key: "value"]])
+      {:ok, %{
+          "elixir-logger-level" => ":info",
+          "elixir-my_app-key" => "\"value\"",
+      }}
+  """
+  @spec encode(decoded_configs) ::
+          {:ok, encoded_config_map} | {:error, error_reason}
+  def encode(decoded_configs) when is_list(decoded_configs) do
+    try do
+      {:ok,
+       decoded_configs
+       |> Enum.flat_map(&encode_app_and_opts/1)
+       |> Enum.into(%{})}
+    rescue
+      _e -> {:error, :bad_input}
+    end
+  end
+
+  def encode(_), do: {:error, :bad_input}
+
+  defp encode_app_and_opts({app, opts}) when is_list(opts) do
+    Encoder.encode_app_path_and_opts(app, [], opts)
+  end
+
+  @doc ~S"""
+  Reads a config file and returns a map of encoded key/value pairs
+  representing the configuration.  Respects `Mix.Config.import_config/1`.
+
+      iex> ConfigSmuggler.encode_file("config/config.exs")
+      {:ok, %{
+        "elixir-logger-level" => ":info",
+        # ...
+      }}
+  """
+  @spec encode_file(String.t()) ::
+          {:ok, encoded_config_map} | {:error, error_reason}
+  def encode_file(filename) do
+    try do
+      {env, _files} = Mix.Config.eval!(filename)
+      encode(env)
+    rescue
+      Code.LoadError -> {:error, :load_error}
+      _e -> {:error, :bad_input}
+    end
+  end
+
+  @doc ~S"""
+  Encodes a single `Mix.Config.config/2` or `Mix.Config.config/3`
+  statement into one or more encoded key/value pairs.
+
+      iex> ConfigSmuggler.encode_statement("config :my_app, key1: :value1, key2: \"value2\"")
+      {:ok, %{
+          "elixir-my_app-key1" => ":value1",
+          "elixir-my_app-key2" => "\"value2\"",
+      }}
+
+      iex> ConfigSmuggler.encode_statement("config :my_app, MyApp.Endpoint, url: [host: \"localhost\", port: 4444]")
+      {:ok, %{
+        "elixir-my_app-MyApp.Endpoint-url-host" => "\"localhost\"",
+        "elixir-my_app-MyApp.Endpoint-url-port" => "4444",
+      }}
+  """
+  @spec encode_statement(String.t()) ::
+          {:ok, encoded_config_map} | {:error, error_reason}
+  def encode_statement(stmt) when is_binary(stmt) do
+    case String.split(stmt, ":", parts: 2) do
+      [_, config] ->
+        case Code.eval_string("[:#{config}]") do
+          {[app, path | opts], _} when is_atom(path) ->
+            {:ok,
+             Encoder.encode_app_path_and_opts(app, [path], opts)
+             |> Enum.into(%{})}
+
+          {[app | opts], _} ->
+            {:ok,
+             Encoder.encode_app_path_and_opts(app, [], opts)
+             |> Enum.into(%{})}
+
+          _ ->
+            {:error, :bad_input}
+        end
+
+      _ ->
+        {:error, :bad_input}
+    end
+  end
+
+  def encode_statement(_), do: {:error, :bad_input}
 end

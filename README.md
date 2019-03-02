@@ -28,16 +28,18 @@ input anywhere near this module.  You've been warned.
 
 ## Example
 
-    iex> encoded_configs = %{
-    ...>   # imagine you fetch this every 60 seconds at runtime
-    ...>   "elixir-logger-level" => ":debug",
-    ...>   "elixir-my_api-MyApi.Endpoint-url-port" => "8888",
-    ...> }
-    iex> ConfigSmuggler.apply(encoded_configs)
-    iex> Application.get_env(:logger, :level)
-    :debug
-    iex> ConfigSmuggler.encode([my_api: Application.get_all_env(:my_api)])
-    {:ok, %{"elixir-my_api-MyApi.Endpoint-url-port" => "8888"}}
+```elixir
+iex> encoded_configs = %{
+...>   # imagine you fetch this every 60 seconds at runtime
+...>   "elixir-logger-level" => ":debug",
+...>   "elixir-my_api-MyApi.Endpoint-url-port" => "8888",
+...> }
+iex> ConfigSmuggler.apply(encoded_configs)
+iex> Application.get_env(:logger, :level)
+:debug
+iex> ConfigSmuggler.encode([my_api: Application.get_all_env(:my_api)])
+{:ok, %{"elixir-my_api-MyApi.Endpoint-url-port" => "8888"}}
+```
 
 ## Installation
 
