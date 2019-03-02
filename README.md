@@ -48,7 +48,7 @@ Add `:config_smuggler` to your list of deps in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:config_smuggler, "~> 0.5.0"}
+    {:config_smuggler, "~> 0.6.0"}
   ]
 end
 ```
