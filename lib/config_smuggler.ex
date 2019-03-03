@@ -58,6 +58,9 @@ defmodule ConfigSmuggler do
   * `encode_statement/1` converts a single `config` statement from a
     `config.exs`-style file into an encoded config map.
 
+  * At the command line, `mix smuggle encode <filename.exs>` encodes
+    a file with `encode_file/1` and emits a JSON object as output.
+
   ## Encoding Scheme
 
   The encoded key begins with `elixir` and is a hyphen-separated "path"
