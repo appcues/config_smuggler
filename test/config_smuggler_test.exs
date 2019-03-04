@@ -112,6 +112,20 @@ defmodule ConfigSmugglerTest do
       assert({:error, :bad_input} = ConfigSmuggler.encode([a: :b]))
       assert({:error, :bad_input} = ConfigSmuggler.encode(%{}))
     end
+
+    test "handles kwlist fakeouts" do
+      configs = [
+        ex_aws: [
+          access_key_id: [{:system, "AWS_ACCESS_KEY_ID"}, :instance_role],
+          secret_access_key: [{:system, "AWS_SECRET_ACCESS_KEY"}, :instance_role],
+        ]
+      ]
+      config_map = %{
+        "elixir-ex_aws-access_key_id" => "[{:system, \"AWS_ACCESS_KEY_ID\"}, :instance_role]",
+        "elixir-ex_aws-secret_access_key" => "[{:system, \"AWS_SECRET_ACCESS_KEY\"}, :instance_role]",
+      }
+      assert({:ok, config_map} == ConfigSmuggler.encode(configs))
+    end
   end
 
   describe "encode_file/1" do
