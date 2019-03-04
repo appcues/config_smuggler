@@ -7,27 +7,40 @@ defmodule Mix.Tasks.Smuggle do
   """
   use Mix.Task
 
+  defp insp(v), do: ConfigSmuggler.Encoder.encode_value(v)
+
   @impl true
   @shortdoc "Encodes a config.exs-style file into JSON keys and values"
   def run(["encode", filename]) do
     with {:ok, encoded_config_map} <- ConfigSmuggler.encode_file(filename) do
-      IO.puts("{")
+      cond do
+        Code.ensure_loaded?(Jason) ->
+          encoded_config_map
+          |> Jason.encode!()
+          |> IO.puts()
 
-      encoded_config_map
-      |> Enum.map(fn {k,v} -> "  #{inspect(k)}: #{inspect(v)}" end)
-      |> Enum.join(",\n")
-      |> IO.puts
+        Code.ensure_loaded?(Poison) ->
+          encoded_config_map
+          |> Poison.encode!()
+          |> IO.puts()
 
-      IO.puts("}")
+        :else ->
+          data =
+            encoded_config_map
+            |> Enum.map(fn {k, v} -> "#{insp(k)}:#{insp(v)}" end)
+            |> Enum.join(",")
+
+          IO.puts("{" <> data <> "}")
+      end
     else
       {:error, reason} ->
-        Mix.shell.error("Error: #{inspect(reason)}")
+        Mix.shell().error("Error: #{insp(reason)}")
         System.halt(1)
     end
   end
 
   def run(_args) do
-    Mix.shell.error("Usage: mix smuggle encode <filename.exs>")
+    Mix.shell().error("Usage: mix smuggle encode <filename.exs>")
     System.halt(1)
   end
 end
