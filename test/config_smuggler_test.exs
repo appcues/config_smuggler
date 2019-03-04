@@ -21,10 +21,11 @@ defmodule ConfigSmugglerTest do
       {app,
        [
          {:some_key, :some_value},
-         {Some.Module, [
-             other_key: "other value",
-             deep_key: :deep_value,
-           ]},
+         {Some.Module,
+          [
+            other_key: "other value",
+            deep_key: :deep_value,
+          ]},
        ]},
     ]
 
@@ -97,19 +98,21 @@ defmodule ConfigSmugglerTest do
   describe "encode/1" do
     test "encodes native configs", context do
       assert({:ok, config_map} = ConfigSmuggler.encode(context.decoded_configs))
+
       config_map_without_errors =
         context.errors
-        |> Enum.reduce(context.encoded_config_map, fn ({{k,_v},_e}, acc) ->
+        |> Enum.reduce(context.encoded_config_map, fn {{k, _v}, _e}, acc ->
           Map.delete(acc, k)
         end)
+
       assert(config_map == config_map_without_errors)
     end
 
     test "handles bad inputs" do
       assert({:error, :bad_input} = ConfigSmuggler.encode("blorp"))
-      assert({:error, :bad_input} = ConfigSmuggler.encode(22/7))
+      assert({:error, :bad_input} = ConfigSmuggler.encode(22 / 7))
       assert({:error, :bad_input} = ConfigSmuggler.encode([1, 2, 3]))
-      assert({:error, :bad_input} = ConfigSmuggler.encode([a: :b]))
+      assert({:error, :bad_input} = ConfigSmuggler.encode(a: :b))
       assert({:error, :bad_input} = ConfigSmuggler.encode(%{}))
     end
 
@@ -117,13 +120,20 @@ defmodule ConfigSmugglerTest do
       configs = [
         ex_aws: [
           access_key_id: [{:system, "AWS_ACCESS_KEY_ID"}, :instance_role],
-          secret_access_key: [{:system, "AWS_SECRET_ACCESS_KEY"}, :instance_role],
-        ]
+          secret_access_key: [
+            {:system, "AWS_SECRET_ACCESS_KEY"},
+            :instance_role,
+          ],
+        ],
       ]
+
       config_map = %{
-        "elixir-ex_aws-access_key_id" => "[{:system, \"AWS_ACCESS_KEY_ID\"}, :instance_role]",
-        "elixir-ex_aws-secret_access_key" => "[{:system, \"AWS_SECRET_ACCESS_KEY\"}, :instance_role]",
+        "elixir-ex_aws-access_key_id" =>
+          "[{:system, \"AWS_ACCESS_KEY_ID\"}, :instance_role]",
+        "elixir-ex_aws-secret_access_key" =>
+          "[{:system, \"AWS_SECRET_ACCESS_KEY\"}, :instance_role]",
       }
+
       assert({:ok, config_map} == ConfigSmuggler.encode(configs))
     end
   end
@@ -138,20 +148,27 @@ defmodule ConfigSmugglerTest do
         "elixir-config_smuggler-ConfigSmuggler-kwlist-yes" => "true",
         "elixir-config_smuggler-ConfigSmuggler-kwlist-no" => "false",
       }
+
       assert({:ok, config_map} == ConfigSmuggler.encode_file("config/test.exs"))
     end
 
     test "returns errors on broken input" do
       assert({:error, :load_error} = ConfigSmuggler.encode_file("nope.txt"))
       assert({:error, :bad_input} = ConfigSmuggler.encode_file("README.md"))
-      assert({:error, :bad_input} = ConfigSmuggler.encode_file("assets/smuggler.jpg"))
+
+      assert(
+        {:error, :bad_input} = ConfigSmuggler.encode_file("assets/smuggler.jpg")
+      )
     end
   end
 
   describe "encode_statement/1" do
     test "returns errors on broken input" do
       assert({:error, :bad_input} = ConfigSmuggler.encode_statement(:nope))
-      assert({:error, :bad_input} = ConfigSmuggler.encode_statement("config wat"))
+
+      assert(
+        {:error, :bad_input} = ConfigSmuggler.encode_statement("config wat")
+      )
     end
   end
 end

@@ -34,6 +34,8 @@ defmodule ConfigSmuggler.MixProject do
 
   defp deps do
     [
+      {:jason, "~> 1.0", optional: true},
+      {:poison, "~> 1.0", optional: true},
       {:freedom_formatter, "~> 1.0", only: :dev, runtime: false},
       {:dialyxir, "~> 1.0.0-rc.4", only: :dev, runtime: false},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
