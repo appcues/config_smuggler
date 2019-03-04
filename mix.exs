@@ -6,14 +6,14 @@ defmodule ConfigSmuggler.MixProject do
   def project do
     [
       app: :config_smuggler,
-      version: "0.6.0",
+      version: "0.7.0",
       description:
         "ConfigSmuggler converts Elixir-style configuration statements to and from string-encoded key/value pairs.",
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       package: package(),
-      dialyzer: [plt_add_apps: [:mix]],
+      dialyzer: [plt_add_apps: [:mix, :jason, :poison]],
       aliases: [docs: "docs --source-url #{@github_repo}"],
     ]
   end

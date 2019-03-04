@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.0
+
+Added `mix smuggle encode` task.  Fixed handling of config values
+that aren't keyword lists but look almost like them.
+
 ## 0.6.0
 
 `t:error_reason` is no longer string-typed, instead being one of
