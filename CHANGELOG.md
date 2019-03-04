@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.1
+
+Made optional Poison dep more permissive.
+
 ## 0.7.0
 
 Added `mix smuggle encode` task.  Fixed handling of config values
