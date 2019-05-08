@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.2
+
+Use `persistent: true` when persisting env with `Application.put_env/3`.
+
 ## 0.7.1
 
 Made optional Poison dep more permissive.
