@@ -41,6 +41,6 @@ defmodule ConfigSmuggler.Apply do
   end
 
   defp put_opts_in_env({app, opts}) do
-    Enum.each(opts, fn {k, v} -> Application.put_env(app, k, v) end)
+    Enum.each(opts, fn {k, v} -> Application.put_env(app, k, v, persistent: true) end)
   end
 end
