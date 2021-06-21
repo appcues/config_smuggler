@@ -14,7 +14,7 @@ defmodule ConfigSmuggler.MixProject do
       deps: deps(),
       package: package(),
       dialyzer: [plt_add_apps: [:mix, :jason, :poison]],
-      aliases: [docs: "docs --source-url #{@github_repo}"],
+      aliases: [docs: "docs --source-url #{@github_repo}"]
     ]
   end
 
@@ -22,13 +22,13 @@ defmodule ConfigSmuggler.MixProject do
     [
       licenses: ["MIT"],
       maintainers: ["pete gamache <pete@appcues.com>"],
-      links: %{github: @github_repo},
+      links: %{github: @github_repo}
     ]
   end
 
   def application do
     [
-      extra_applications: [:logger],
+      extra_applications: [:logger]
     ]
   end
 
@@ -36,9 +36,8 @@ defmodule ConfigSmuggler.MixProject do
     [
       {:jason, "~> 1.0", optional: true},
       {:poison, "~> 1.5 or ~> 2.0 or ~> 3.0", optional: true},
-      {:freedom_formatter, "~> 1.0", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.0.0-rc.4", only: :dev, runtime: false},
-      {:ex_doc, "~> 0.19", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.1", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.24", only: :dev, runtime: false}
     ]
   end
 end
