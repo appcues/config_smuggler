@@ -50,8 +50,7 @@ defmodule ConfigSmugglerTest do
       assert(:some_value = Application.get_env(app, :some_key))
 
       assert(
-        [other_key: "other value", deep_key: :deep_value] =
-          Application.get_env(app, Some.Module)
+        [other_key: "other value", deep_key: :deep_value] = Application.get_env(app, Some.Module)
       )
     end
 
@@ -63,8 +62,7 @@ defmodule ConfigSmugglerTest do
       assert(:some_value = Application.get_env(app, :some_key))
 
       assert(
-        [other_key: "other value", deep_key: :deep_value] =
-          Application.get_env(app, Some.Module)
+        [other_key: "other value", deep_key: :deep_value] = Application.get_env(app, Some.Module)
       )
     end
 
@@ -78,10 +76,7 @@ defmodule ConfigSmugglerTest do
 
   describe "decode/1" do
     test "decodes a config map", context do
-      assert(
-        {:ok, decoded_configs, errors} =
-          ConfigSmuggler.decode(context.encoded_config_map)
-      )
+      assert({:ok, decoded_configs, errors} = ConfigSmuggler.decode(context.encoded_config_map))
 
       assert(decoded_configs == context.decoded_configs)
       assert(errors == context.errors)
@@ -128,8 +123,7 @@ defmodule ConfigSmugglerTest do
       ]
 
       config_map = %{
-        "elixir-ex_aws-access_key_id" =>
-          "[{:system, \"AWS_ACCESS_KEY_ID\"}, :instance_role]",
+        "elixir-ex_aws-access_key_id" => "[{:system, \"AWS_ACCESS_KEY_ID\"}, :instance_role]",
         "elixir-ex_aws-secret_access_key" =>
           "[{:system, \"AWS_SECRET_ACCESS_KEY\"}, :instance_role]"
       }
@@ -156,9 +150,7 @@ defmodule ConfigSmugglerTest do
       assert({:error, :load_error} = ConfigSmuggler.encode_file("nope.txt"))
       assert({:error, :bad_input} = ConfigSmuggler.encode_file("README.md"))
 
-      assert(
-        {:error, :bad_input} = ConfigSmuggler.encode_file("assets/smuggler.jpg")
-      )
+      assert({:error, :bad_input} = ConfigSmuggler.encode_file("assets/smuggler.jpg"))
     end
   end
 
@@ -166,9 +158,7 @@ defmodule ConfigSmugglerTest do
     test "returns errors on broken input" do
       assert({:error, :bad_input} = ConfigSmuggler.encode_statement(:nope))
 
-      assert(
-        {:error, :bad_input} = ConfigSmuggler.encode_statement("config wat")
-      )
+      assert({:error, :bad_input} = ConfigSmuggler.encode_statement("config wat"))
     end
   end
 end
