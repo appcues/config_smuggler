@@ -14,7 +14,7 @@ defmodule ConfigSmugglerTest do
       "elixir-#{app}-Some.Module-other_key" => "\"other value\"",
       "elixir-#{app}-Some.Module-deep_key" => ":deep_value",
       "bad key" => "22",
-      "elixir-#{app}-Some.Module-bad_value" => "won't work",
+      "elixir-#{app}-Some.Module-bad_value" => "won't work"
     }
 
     decoded_configs = [
@@ -24,14 +24,14 @@ defmodule ConfigSmugglerTest do
          {Some.Module,
           [
             other_key: "other value",
-            deep_key: :deep_value,
-          ]},
-       ]},
+            deep_key: :deep_value
+          ]}
+       ]}
     ]
 
     errors = [
       {{"elixir-#{app}-Some.Module-bad_value", "won't work"}, :bad_value},
-      {{"bad key", "22"}, :bad_key},
+      {{"bad key", "22"}, :bad_key}
     ]
 
     {:ok,
@@ -122,16 +122,16 @@ defmodule ConfigSmugglerTest do
           access_key_id: [{:system, "AWS_ACCESS_KEY_ID"}, :instance_role],
           secret_access_key: [
             {:system, "AWS_SECRET_ACCESS_KEY"},
-            :instance_role,
-          ],
-        ],
+            :instance_role
+          ]
+        ]
       ]
 
       config_map = %{
         "elixir-ex_aws-access_key_id" =>
           "[{:system, \"AWS_ACCESS_KEY_ID\"}, :instance_role]",
         "elixir-ex_aws-secret_access_key" =>
-          "[{:system, \"AWS_SECRET_ACCESS_KEY\"}, :instance_role]",
+          "[{:system, \"AWS_SECRET_ACCESS_KEY\"}, :instance_role]"
       }
 
       assert({:ok, config_map} == ConfigSmuggler.encode(configs))
@@ -146,7 +146,7 @@ defmodule ConfigSmugglerTest do
         "elixir-config_smuggler-ConfigSmuggler-omg" => ":lol",
         "elixir-config_smuggler-ConfigSmuggler-timeout" => "5000",
         "elixir-config_smuggler-ConfigSmuggler-kwlist-yes" => "true",
-        "elixir-config_smuggler-ConfigSmuggler-kwlist-no" => "false",
+        "elixir-config_smuggler-ConfigSmuggler-kwlist-no" => "false"
       }
 
       assert({:ok, config_map} == ConfigSmuggler.encode_file("config/test.exs"))

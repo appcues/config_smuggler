@@ -10,7 +10,7 @@ defmodule ConfigSmuggler.Decoder do
           {:ok, ConfigSmuggler.decoded_configs(),
            [
              {{ConfigSmuggler.encoded_key(), ConfigSmuggler.encoded_value()},
-              ConfigSmuggler.error_reason()},
+              ConfigSmuggler.error_reason()}
            ]}
           | {:error, ConfigSmuggler.error_reason()}
   def decode_and_merge(%{} = config_map) do
