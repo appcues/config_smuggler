@@ -1,6 +1,10 @@
 <img src="assets/smuggler.jpg?raw=true" height="170" width="170" align="right">
 
-# ConfigSmuggler [![Build Status](https://travis-ci.org/appcues/config_smuggler.svg?branch=master)](https://travis-ci.org/appcues/config_smuggler) [![Docs](https://img.shields.io/badge/api-docs-green.svg?style=flat)](https://hexdocs.pm/config_smuggler/config_smuggler.html) [![Hex.pm Version](http://img.shields.io/hexpm/v/config_smuggler.svg?style=flat)](https://hex.pm/packages/config_smuggler)
+# ConfigSmuggler
+
+[![Build Status](https://circleci.com/gh/appcues/config_smuggler.svg?style=svg)](https://circleci.com/gh/appcues/config_smuggler)
+[![Docs](https://img.shields.io/badge/api-docs-green.svg?style=flat)](https://hexdocs.pm/config_smuggler/config_smuggler.html)
+[![Hex.pm Version](http://img.shields.io/hexpm/v/config_smuggler.svg?style=flat)](https://hex.pm/packages/config_smuggler)
 
 ConfigSmuggler is a library for converting Elixir-style configuration
 statements to and from string-encoded key/value pairs.
@@ -19,12 +23,12 @@ systems with Elixir services.
 
 ## WARNING!
 
-The functions in `ConfigSmuggler` are *not suitable* for use on
-untrusted inputs!  Code is `eval`ed, atoms are created, etc.
+The functions in `ConfigSmuggler` are _not suitable_ for use on
+untrusted inputs! Code is `eval`ed, atoms are created, etc.
 
 Configs are considered privileged inputs, so don't worry about using
-ConfigSmuggler for its intended purpose.  But please, *never* let user
-input anywhere near this module.  You've been warned.
+ConfigSmuggler for its intended purpose. But please, _never_ let user
+input anywhere near this module. You've been warned.
 
 ## Example
 
@@ -60,21 +64,21 @@ hexdocs.pm](https://hexdocs.pm/config_smuggler/ConfigSmuggler.html).
 
 ## Overview
 
-* `apply/1` applies encoded or decoded configs to the current environment.
+- `apply/1` applies encoded or decoded configs to the current environment.
 
-* `decode/1` converts an encoded config map into Elixir-native decoded
+- `decode/1` converts an encoded config map into Elixir-native decoded
   configs, also returning a list of zero or more encoded key/value pairs
   that could not be decoded.
 
-* `encode/1` converts Elixir-native decoded configs
+- `encode/1` converts Elixir-native decoded configs
   (i.e., a keyword list with app name as key and keyword list of
   configs as value) into an encoded config map.
 
-* `encode_file/1` converts an entire `config.exs`-style file
+- `encode_file/1` converts an entire `config.exs`-style file
   (along with all files included with `Mix.Config.import_config/1`)
   into an encoded config map.
 
-* `encode_statement/1` converts a single `config` statement from a
+- `encode_statement/1` converts a single `config` statement from a
   `config.exs`-style file into an encoded config map.
 
 ## Encoding Scheme
