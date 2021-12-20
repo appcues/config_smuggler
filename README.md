@@ -93,6 +93,6 @@ Decoding is performed by `Code.eval_string/1` and `String.to_atom/1`.
 
 ## Authorship and License
 
-Copyright 2019, Appcues, Inc.
+Copyright 2019-2021, Appcues, Inc.
 
 ConfigSmuggler is released under the [MIT License](MIT_LICENSE.txt).
