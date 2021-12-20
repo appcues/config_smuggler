@@ -219,8 +219,14 @@ defmodule ConfigSmuggler do
       {env, _files} = Mix.Config.eval!(filename)
       encode(env)
     rescue
-      Code.LoadError -> {:error, :load_error}
-      _e -> {:error, :bad_input}
+      Code.LoadError ->
+        {:error, :load_error}
+
+      File.Error ->
+        {:error, :load_error}
+
+      _e ->
+        {:error, :bad_input}
     end
   end
 
