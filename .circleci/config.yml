@@ -1,26 +1,10 @@
 version: 2.1
 
-install_aws_cli: &install_aws_cli
-  name: Install AWS CLI
-  command: |
-    sudo apt-get update -y
-    sudo apt-get install -y awscli
-    export PATH=$PATH:$HOME/.local/bin
-    export AWS_DEFAULT_REGION=us-west-2
-
-workflows:
-  build:
-    jobs:
-      - build:
-          context: Appcues
-
 jobs:
   build:
     parallelism: 1
     docker:
-      - image: circleci/elixir:1.10.3
-        environment:
-          MIX_ENV: test
+      - image: circleci/elixir:1.12
 
     working_directory: ~/app
 
@@ -28,9 +12,6 @@ jobs:
       - checkout
       - run: mix local.hex --force
       - run: mix local.rebar --force
-      - run: mix hex.organization auth appcues --key $HEX_API_KEY
-      - run:
-          <<: *install_aws_cli
 
       - restore_cache:
           keys:
@@ -44,7 +25,7 @@ jobs:
 
       - run: mix do deps.get, compile
       - run: mix format --check-formatted
-      - run: MIX_ENV=dev mix dialyzer
+      - run: mix dialyzer
       - save_cache:
           key: v1-mix-cache-{{ .Branch }}-{{ checksum "mix.lock" }}
           paths: "deps"
@@ -56,4 +37,4 @@ jobs:
 
       - store_test_results:
           # Read more: https://circleci.com/docs/2.0/collect-test-data/
-          path: _build/test/lib/opscues_config # Replace with the name of your :app
+          path: _build/test/lib/config_smuggler # Replace with the name of your :app

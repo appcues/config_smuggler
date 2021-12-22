@@ -6,7 +6,7 @@ defmodule ConfigSmuggler.MixProject do
   def project do
     [
       app: :config_smuggler,
-      version: "0.7.3",
+      version: "0.8.0",
       description:
         "ConfigSmuggler converts Elixir-style configuration statements to and from string-encoded key/value pairs.",
       elixir: "~> 1.7",
@@ -35,9 +35,9 @@ defmodule ConfigSmuggler.MixProject do
   defp deps do
     [
       {:jason, "~> 1.0", optional: true},
-      {:poison, "~> 1.5 or ~> 2.0 or ~> 3.0", optional: true},
+      {:poison, "~> 5.0", optional: true},
       {:dialyxir, "~> 1.1", only: :dev, runtime: false},
-      {:ex_doc, "~> 0.24", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.26", only: :dev, runtime: false}
     ]
   end
 end

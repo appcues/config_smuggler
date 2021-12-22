@@ -1,6 +1,10 @@
 <img src="assets/smuggler.jpg?raw=true" height="170" width="170" align="right">
 
-# ConfigSmuggler [![Build Status](https://travis-ci.org/appcues/config_smuggler.svg?branch=master)](https://travis-ci.org/appcues/config_smuggler) [![Docs](https://img.shields.io/badge/api-docs-green.svg?style=flat)](https://hexdocs.pm/config_smuggler/config_smuggler.html) [![Hex.pm Version](http://img.shields.io/hexpm/v/config_smuggler.svg?style=flat)](https://hex.pm/packages/config_smuggler)
+# ConfigSmuggler
+
+-[![Build Status](https://circleci.com/gh/appcues/config_smuggler.svg?style=svg)](https://circleci.com/gh/appcues/config_smuggler)
+-[![Docs](https://img.shields.io/badge/api-docs-green.svg?style=flat)](https://hexdocs.pm/config_smuggler/config_smuggler.html)
+-[![Hex.pm Version](http://img.shields.io/hexpm/v/config_smuggler.svg?style=flat)](https://hex.pm/packages/config_smuggler)
 
 ConfigSmuggler is a library for converting Elixir-style configuration
 statements to and from string-encoded key/value pairs.
@@ -89,6 +93,6 @@ Decoding is performed by `Code.eval_string/1` and `String.to_atom/1`.
 
 ## Authorship and License
 
-Copyright 2019, Appcues, Inc.
+Copyright 2019-2021, Appcues, Inc.
 
 ConfigSmuggler is released under the [MIT License](MIT_LICENSE.txt).
