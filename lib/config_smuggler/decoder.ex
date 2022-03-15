@@ -25,7 +25,7 @@ defmodule ConfigSmuggler.Decoder do
 
     merged_config =
       Enum.reduce(validated_pairs.valid, [], fn {app, opts}, acc ->
-        Mix.Config.merge(acc, [{app, opts}])
+        Config.Reader.merge(acc, [{app, opts}])
       end)
 
     {:ok, merged_config, validated_pairs.invalid}

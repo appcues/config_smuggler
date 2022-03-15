@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 ## Used by the ConfigSmuggler.encode_file/1 test in
 ## test/config_smuggler_test.exs
