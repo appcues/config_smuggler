@@ -36,7 +36,7 @@ defmodule ConfigSmuggler.Apply do
   defp apply_config(app, config) do
     old_config = app |> Application.get_all_env()
 
-    Mix.Config.merge([{app, old_config}], [{app, config}])
+    Config.Reader.merge([{app, old_config}], [{app, config}])
     |> Enum.each(&put_opts_in_env/1)
   end
 

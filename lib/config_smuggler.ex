@@ -216,7 +216,7 @@ defmodule ConfigSmuggler do
           {:ok, encoded_config_map} | {:error, error_reason}
   def encode_file(filename) do
     try do
-      {env, _files} = Mix.Config.eval!(filename)
+      {env, _files} = Config.Reader.read_imports!(filename)
       encode(env)
     rescue
       Code.LoadError ->
