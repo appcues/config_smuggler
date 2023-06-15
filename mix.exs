@@ -37,7 +37,7 @@ defmodule ConfigSmuggler.MixProject do
       {:jason, "~> 1.0", optional: true},
       {:poison, "~> 5.0", optional: true},
       {:dialyxir, "~> 1.1", only: :dev, runtime: false},
-      {:ex_doc, "~> 0.26", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.29", only: :dev, runtime: false}
     ]
   end
 end
