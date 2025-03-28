@@ -13,22 +13,22 @@ defmodule ConfigSmuggler.Decoder do
               ConfigSmuggler.error_reason()}
            ]}
           | {:error, ConfigSmuggler.error_reason()}
-  def decode_and_merge(%{} = config_map) do
+  def decode_and_merge(config_map) when is_map(config_map) do
     ## decoded stuff goes under `valid`, non-decoded stuff under `invalid`
-    validated_pairs =
-      Enum.reduce(config_map, %{valid: [], invalid: []}, fn {k, v}, acc ->
+    {valid, invalid} =
+      Enum.reduce(config_map, {[], []}, fn {k, v}, {valid, invalid} ->
         case decode_pair(k, v) do
-          {:ok, app, opts} -> %{acc | valid: [{app, opts} | acc.valid]}
-          {:error, error} -> %{acc | invalid: [{{k, v}, error} | acc.invalid]}
+          {:ok, app, opts} -> {[{app, opts} | valid], invalid}
+          {:error, error} -> {valid, [{{k, v}, error} | invalid]}
         end
       end)
 
     merged_config =
-      Enum.reduce(validated_pairs.valid, [], fn {app, opts}, acc ->
+      Enum.reduce(valid, [], fn {app, opts}, acc ->
         Config.Reader.merge(acc, [{app, opts}])
       end)
 
-    {:ok, merged_config, validated_pairs.invalid}
+    {:ok, merged_config, invalid}
   end
 
   def decode_and_merge(_), do: {:error, :bad_input}
@@ -51,7 +51,7 @@ defmodule ConfigSmuggler.Decoder do
   @spec decode_pair(
           ConfigSmuggler.encoded_key(),
           ConfigSmuggler.encoded_value()
-        ) :: {:ok, atom, Keyword.t()} | {:error, ConfigSmuggler.error_reason()}
+        ) :: {:ok, atom(), Keyword.t()} | {:error, ConfigSmuggler.error_reason()}
   def decode_pair("elixir-" <> key, value) do
     with {:ok, app, path} <- decode_stripped_key(key),
          {:ok, evaled_value} <- eval(value) do
@@ -79,7 +79,7 @@ defmodule ConfigSmuggler.Decoder do
       {:ok, :api, [Api.Repo, :priv]}
   """
   @spec decode_key(ConfigSmuggler.encoded_key()) ::
-          {:ok, atom, [atom]} | {:error, ConfigSmuggler.error_reason()}
+          {:ok, atom(), [atom()]} | {:error, ConfigSmuggler.error_reason()}
   def decode_key("elixir-" <> key) do
     decode_stripped_key(key)
   end

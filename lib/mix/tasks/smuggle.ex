@@ -13,25 +13,12 @@ defmodule Mix.Tasks.Smuggle do
   @shortdoc "Encodes a config.exs-style file into JSON keys and values"
   def run(["encode", filename]) do
     with {:ok, encoded_config_map} <- ConfigSmuggler.encode_file(filename) do
-      cond do
-        Code.ensure_loaded?(Jason) ->
-          encoded_config_map
-          |> Jason.encode!()
-          |> IO.puts()
+      data =
+        encoded_config_map
+        |> Enum.map(fn {k, v} -> "#{insp(k)}:#{insp(v)}" end)
+        |> Enum.join(",")
 
-        Code.ensure_loaded?(Poison) ->
-          encoded_config_map
-          |> Poison.encode!()
-          |> IO.puts()
-
-        :else ->
-          data =
-            encoded_config_map
-            |> Enum.map(fn {k, v} -> "#{insp(k)}:#{insp(v)}" end)
-            |> Enum.join(",")
-
-          IO.puts("{" <> data <> "}")
-      end
+      IO.puts("{" <> data <> "}")
     else
       {:error, reason} ->
         Mix.shell().error("Error: #{insp(reason)}")

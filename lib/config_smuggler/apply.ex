@@ -34,7 +34,7 @@ defmodule ConfigSmuggler.Apply do
   def apply_decoded(_), do: {:error, :bad_input}
 
   defp apply_config(app, config) do
-    old_config = app |> Application.get_all_env()
+    old_config = Application.get_all_env(app)
 
     Config.Reader.merge([{app, old_config}], [{app, config}])
     |> Enum.each(&put_opts_in_env/1)
