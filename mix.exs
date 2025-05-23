@@ -6,7 +6,7 @@ defmodule ConfigSmuggler.MixProject do
   def project do
     [
       app: :config_smuggler,
-      version: "1.1.0",
+      version: "1.1.1",
       description:
         "ConfigSmuggler converts Elixir-style configuration statements to and from string-encoded key/value pairs.",
       elixir: "~> 1.18",
