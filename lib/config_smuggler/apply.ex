@@ -38,6 +38,7 @@ defmodule ConfigSmuggler.Apply do
 
     Config.Reader.merge([{app, old_config}], [{app, config}])
     |> Enum.each(&put_opts_in_env/1)
+    dbg()
   end
 
   defp put_opts_in_env({app, opts}) do

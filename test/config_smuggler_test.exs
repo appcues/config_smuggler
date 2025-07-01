@@ -161,4 +161,41 @@ defmodule ConfigSmugglerTest do
       assert({:error, :bad_input} = ConfigSmuggler.encode_statement("config wat"))
     end
   end
+
+  describe "handle string keys" do
+    setup %{app: app} do
+      configs =
+        [
+          {app,
+           [
+             {:kaffe,
+              %{
+                "subscriber_1" => [
+                  group: "winners",
+                  sasl: %{
+                    login: "Jimmy"
+                  }
+                ]
+              }}
+           ]}
+        ]
+
+      ConfigSmuggler.apply(configs)
+      # Application.put_env(app, :configs, configs)
+      {:ok, configs: configs}
+    end
+
+    test "handles merging values with configs including string keys", context do
+      app = context.app
+      configs = context.configs
+
+      encoded_config_map = %{
+        "elixir-#{app}-kaffe-subscriber_1-sasl-login" => "Maxx"
+      }
+
+      assert(:ok = ConfigSmuggler.apply(encoded_config_map))
+      IO.inspect(Application.get_all_env(app))
+      # IO.inspect(config)
+    end
+  end
 end

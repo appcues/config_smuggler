@@ -97,8 +97,15 @@ defmodule ConfigSmuggler.Decoder do
 
   defp to_atom_or_module(str) do
     case str |> String.to_charlist() |> List.first() do
-      c when c in ?a..?z -> String.to_atom(str)
-      _ -> String.to_atom("Elixir." <> str)
+      c when c in ?a..?z ->
+        String.to_atom(str)
+
+      c when c == ?" ->
+        IO.inspect(str)
+        String.to_atom(str)
+
+      _ ->
+        String.to_atom("Elixir." <> str)
     end
   end
 
