@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.6
+
+Bump deps
+
 ## 0.7.2
 
 Use `persistent: true` when persisting env with `Application.put_env/3`.
