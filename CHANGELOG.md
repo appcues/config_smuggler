@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.8
+
+Bump deps
+
 ## 1.1.6
 
 Bump deps
